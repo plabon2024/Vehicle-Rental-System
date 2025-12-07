@@ -4,11 +4,10 @@ import { initDB } from "./config/db";
 import { authRoute } from "./modules/auth/auth.route";
 import { userRoute } from "./modules/user/user.route";
 import { vehicleRoute } from "./modules/vehicles/vehicles.route";
+import { bookingRoute } from "./modules/bookings/bookings.route";
 
 const app = express();
 app.use(express.json());
-
-
 
 // user
 app.use("/api/v1/users", userRoute);
@@ -16,6 +15,8 @@ app.use("/api/v1/users", userRoute);
 app.use("/api/v1/auth", authRoute);
 // vehicle
 app.use("/api/v1/vehicles", vehicleRoute);
+// bookings
+app.use("/api/v1/bookings", bookingRoute);
 
 const port = config.port || 5000;
 // 404
@@ -29,7 +30,7 @@ app.use((req: Request, res: Response) => {
 
 (async () => {
   await initDB();
-  app.listen(5000, () => console.log("server running on 5000"));
+  app.listen(port, () => console.log("server running on port", port));
 })();
 
 app.get("/", (req: Request, res: Response) => {
