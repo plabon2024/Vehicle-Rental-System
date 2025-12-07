@@ -12,7 +12,7 @@ const auth = (...allowedRoles: ("admin" | "user")[]) => {
         return res.status(401).json({ message: "Unauthorized: Missing token" });
       }
 
-      const token = authHeader.split(" ")[1];
+      const token = authHeader.split(" ")[1] as string;
 
       const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
 
