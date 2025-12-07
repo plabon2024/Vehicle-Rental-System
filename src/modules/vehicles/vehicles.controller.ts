@@ -30,7 +30,10 @@ const getAllVehicles = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "Vehicles retrieved successfully",
-      data: result.rows,
+         data: {
+        ...result.rows[0],
+        daily_rent_price: Number(result.rows[0].daily_rent_price),
+      },
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
@@ -52,7 +55,10 @@ const getVehicleById = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "Vehicle retrieved successfully",
-      data: result.rows[0],
+         data: {
+        ...result.rows[0],
+        daily_rent_price: Number(result.rows[0].daily_rent_price),
+      },
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
@@ -76,7 +82,10 @@ const updateVehicle = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Vehicle updated successfully",
-      data: result.rows[0],
+         data: {
+        ...result.rows[0],
+        daily_rent_price: Number(result.rows[0].daily_rent_price),
+      },
     });
   } catch (error: any) {
     return res.status(500).json({

@@ -5,5 +5,7 @@ import { Roles } from "../auth/auth.constant";
 
 const router = Router();
 router.get("/", auth(Roles.admin), userController.getAllUser);
+router.put("/:id", auth(Roles.admin,Roles.customer), userController.updateUser);
+router.delete("/:id", auth(Roles.admin), userController.deleteUser);
 
 export const userRoute = router;
