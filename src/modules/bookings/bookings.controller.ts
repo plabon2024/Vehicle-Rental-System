@@ -182,6 +182,11 @@ const updateBooking = async (req: Request, res: Response) => {
 
     const booking = bookingResult.rows[0];
 
+    // Normalize dates (assumes booking dates are stored in UTC or a consistent timezone)
+    const now = new Date();
+    const rentStartDate = new Date(booking.rent_start_date);
+    const rentEndDate = new Date(booking.rent_end_date);
+
     // Customer rules
     if (isCustomer) {
       if (booking.customer_id !== authUser.id) {
@@ -204,17 +209,42 @@ const updateBooking = async (req: Request, res: Response) => {
           message: "Only active bookings can be cancelled",
         });
       }
+
+      // NEW: only allow cancellation before the start date
+      if (now >= rentStartDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Bookings can only be cancelled before the start date",
+        });
+      }
     }
 
     // Admin rules
     if (isAdmin) {
+      // NEW: admins should not cancel; only customers can cancel
+      if (status === "cancelled") {
+        return res.status(403).json({
+          success: false,
+          message: "Admins cannot cancel bookings; only customers can cancel",
+        });
+      }
+
+      // Admin can mark booking as returned
       if (status === "returned" && booking.status !== "active") {
         return res.status(400).json({
           success: false,
           message: "Only active bookings can be marked as returned",
         });
       }
-      // Admin can set cancelled or returned; you can tighten this if needed.
+
+      // Optional rule (decide based on your business logic):
+      // prevent marking as returned before the end date if you don't want early returns:
+      // if (status === "returned" && now < rentEndDate) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "Booking cannot be marked as returned before the end date",
+      //   });
+      // }
     }
 
     // Perform status update and vehicle availability update
@@ -270,8 +300,12 @@ const updateBooking = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+
+
 export const bookingController = {
   createBooking,
   getAllBookings,
-  updateBooking,
+  updateBooking
 };

@@ -31,7 +31,7 @@ const createBookingFromDB = async (payload: CreateBookingPayload) => {
       throw new Error("Vehicle is not available for booking");
     }
 
-    // Calculate  days 
+    // Calculate  days
     const start = new Date(rent_start_date);
     const end = new Date(rent_end_date);
     const diffMs = end.getTime() - start.getTime();
@@ -230,11 +230,58 @@ const updateBookingStatusFromDB = async (
     client.release();
   }
 };
+const autoReturnExpiredBookings = async () => {
+  const client = await pool.connect();
 
+  try {
+    await client.query("BEGIN");
+
+    // 1) Update bookings that should be auto-returned
+    const bookingsToReturnResult = await client.query(
+      `
+      UPDATE bookings
+      SET status = 'returned'
+      WHERE status = 'active'
+        AND rent_end_date <= NOW()
+      RETURNING id, vehicle_id
+      `
+    );
+
+    const updatedBookings = bookingsToReturnResult.rows as {
+      id: number;
+      vehicle_id: number;
+    }[];
+
+    if (updatedBookings.length > 0) {
+      // Get all vehicle IDs we just freed
+      const vehicleIds = updatedBookings.map((b) => b.vehicle_id);
+
+      // 2) Mark those vehicles as available
+      await client.query(
+        `
+        UPDATE vehicles
+        SET availability_status = 'available'
+        WHERE id = ANY($1::int[])
+        `,
+        [vehicleIds]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    return updatedBookings.length; // number of bookings auto-returned
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+};
 export const bookingService = {
   createBookingFromDB,
   getAllBookingsForAdminFromDB,
   getBookingsForCustomerFromDB,
   getBookingByIdFromDB,
   updateBookingStatusFromDB,
+  autoReturnExpiredBookings,
 };

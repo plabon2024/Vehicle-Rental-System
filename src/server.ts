@@ -5,6 +5,8 @@ import { authRoute } from "./modules/auth/auth.route";
 import { userRoute } from "./modules/user/user.route";
 import { vehicleRoute } from "./modules/vehicles/vehicles.route";
 import { bookingRoute } from "./modules/bookings/bookings.route";
+import { autoReturnMiddleware } from "./middleware/autoReturn";
+import { startAutoReturnScheduler } from "./schedulers/autoReturn.scheduler";
 
 const app = express();
 app.use(express.json());
@@ -30,6 +32,8 @@ app.use((req: Request, res: Response) => {
 
 (async () => {
   await initDB();
+  startAutoReturnScheduler();
+
   app.listen(port, () => console.log("server running on port", port));
 })();
 
