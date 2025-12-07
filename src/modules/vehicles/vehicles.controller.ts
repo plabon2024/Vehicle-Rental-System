@@ -31,12 +31,11 @@ const getAllVehicles = async (req: Request, res: Response) => {
       ...item,
       daily_rent_price: Number(item.daily_rent_price),
     }));
+
     res.status(200).json({
       success: true,
       message: "Vehicles retrieved successfully",
-      data: {
-        ...rows,
-      },
+      data: rows,
     });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
